@@ -5,10 +5,13 @@ clear all
 data = xlsread('Airfoil_Data.xlsx');
 historic = xlsread('Historical Data for NACA0015.csv');
 
+mmHg2Pa = 101325/760; %millimeters mercury to pascals
+
 x_historic = historic(:,1)/100;
-velocity_ratio = historic(:,2);
+velocity_ratio = historic(:,2); %(v/V) ^2
 
 chord = 0.2; %m
+
 x_coord = data(1:39,1) * chord;
 airfoil_x = x_coord;
 airfoil_x(end+1) = 1; %Add point at (1, 0) to close the airfoil for display
@@ -16,10 +19,10 @@ y_coord = data(1:39,2) * chord;
 airfoil_y = y_coord;
 airfoil_y(end+1) = 0; %Added to close the airfoil for display
 
-zero_deg_pressure = data(1:39,3);
-five_deg_pressure = data(1:39,4);
-ten_deg_pressure = data(1:39,5);
-fifteen_deg_pressure = data(1:39,6);
+zero_deg_pressure = data(1:39,3) * mmHg2Pa;
+five_deg_pressure = data(1:39,4) * mmHg2Pa;
+ten_deg_pressure = data(1:39,5) * mmHg2Pa;
+fifteen_deg_pressure = data(1:39,6) * mmHg2Pa;
 
 zero_deg_data = readtable('NACA_0015_airfoil_data\0015 0 degrees.txt');
 five_deg_data = readtable('NACA_0015_airfoil_data\0015 5 degrees.txt');
@@ -41,10 +44,10 @@ for i = 1:length(x_historic)
 end
 
 %Calculate pressure coefficients at varying AoA
-C_p_0deg = zero_deg_pressure'     ./ 0.621607;
-C_p_5deg = five_deg_pressure'     ./ 0.631065;
-C_p_10deg = ten_deg_pressure'     ./ 0.625189;
-C_p_15deg = fifteen_deg_pressure' ./ 0.629732;
+C_p_0deg = zero_deg_pressure'     / (0.621607 * mmHg2Pa);
+C_p_5deg = five_deg_pressure'     / (0.631065 * mmHg2Pa);
+C_p_10deg = ten_deg_pressure'     / (0.625189 * mmHg2Pa);
+C_p_15deg = fifteen_deg_pressure' / (0.629732 * mmHg2Pa);
 
 figure(2)
 plot(x_coord/chord, C_p_0deg)
@@ -90,11 +93,11 @@ ylabel('Pressure Coefficient')
 % Lift and Drag Coefficients for angles of attack
 % Historic
 angles = linspace(1,26,1);
-C_N_Historic = -trapz(C_p_Historic,x_historic);
+C_N_Historic = -trapz(C_p_Historic, x_historic);
 C_A_Historic = trapz(C_p_Historic,x_historic);
 %trapz(x_historic, C_p_Historic)
-C_L_Historic = -C_A_Historic*sind(angles)+C_N_Historic*cosd(angles);
-C_D_Historic = C_A_Historic*cosd(angles)+C_N_Historic*sind(angles);
+C_L_Historic = -C_A_Historic * sind(angles) + C_N_Historic * cosd(angles);
+C_D_Historic = C_A_Historic * cosd(angles) + C_N_Historic * sind(angles);
 
 %Prepare sections of airfoil for segmenting data
 %Nightmare structure so that we can give wing segments to functions...
@@ -111,6 +114,21 @@ segments = struct(...
 
 Cpseg0deg = segmentCp(C_p_0deg, segments);
 Cpseg5deg = segmentCp(C_p_5deg, segments);
+
+%(in)sanity checks
+upper_tot = sum(Cpseg5deg.upper);
+fprintf("Upper Cp total sanity check 5 deg: %f\n", upper_tot);
+lower_tot = sum(Cpseg5deg.lower);
+fprintf("Lower Cp total sanity check 5 deg: %f\n", lower_tot);
+
+%trapz lower
+tr_lower = trapz(segments.lower_x, Cpseg5deg.lower);
+tr_upper = trapz(segments.upper_x_flip, Cpseg5deg.upper_flipped);
+fprintf("Lower trapz: %f, upper trapz: %f for 5 deg\n", tr_lower, tr_upper);
+
+CN = (tr_lower - tr_upper)/chord;
+fprintf("C_N for 5 deg: %f", CN);
+
 %trapz(segments.back_l_y, Cpseg5deg.back_l)
 Cpseg10deg = segmentCp(C_p_10deg, segments);
 Cpseg15deg = segmentCp(C_p_15deg, segments);
@@ -177,7 +195,7 @@ ylabel('Drag Coefficient')
 %Segment Cp data into upper/lower sections of wing
 function Cp = segmentCp(CpData, seg)
     Cp = struct( ...
-        "upper_flipped", flip(CpData(:, 1:20), 2),...
+        "upper_flipped", flip(CpData(:, 1:20), 1),...
         "upper", CpData(:, 1:20), ...
         "lower", CpData(:, 21:end));
 end
@@ -187,7 +205,7 @@ function Coeffs = calculateCs(Cp, alpha, seg)
     C_N = (trapz(seg.lower_x, Cp.lower)...
         - trapz(seg.upper_x_flip, Cp.upper_flipped)) / seg.chord;
     
-    C_A = (1/seg.chord) * (trapz(seg.lower_y, Cp.lower)...
+    C_A = (trapz(seg.lower_y, Cp.lower)...
         - trapz(seg.upper_y_flip, Cp.upper_flipped)) / seg.chord;
     
     C_L = -C_A * sind(alpha) + C_N * cosd(alpha);

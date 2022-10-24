@@ -5,7 +5,7 @@ clear all
 data = xlsread('Airfoil_Data.xlsx');
 historic = xlsread('Historical Data for NACA0015.csv');
 
-x_historic = historic(:,1);
+x_historic = historic(:,1)/100;
 velocity_ratio = historic(:,2);
 
 chord = 0.2; %m
@@ -47,7 +47,7 @@ C_p_10deg = ten_deg_pressure'     ./ 0.625189;
 C_p_15deg = fifteen_deg_pressure' ./ 0.629732;
 
 figure(2)
-plot(x_coord, C_p_0deg)
+plot(x_coord/chord, C_p_0deg)
 hold on
 %plot(x_coord(21:end, C_p_0deg(21:end)))
 plot(zero_deg_data.x(1:50,1),zero_deg_data.Cpv(1:50,1),'--r')
@@ -59,7 +59,7 @@ xlabel('x/c')
 ylabel('Pressure Coefficient')
 
 figure(3)
-plot(x_coord,C_p_5deg)
+plot(x_coord/chord, C_p_5deg)
 hold on
 plot(five_deg_data.x,five_deg_data.Cpv,'r')
 hold off
@@ -71,7 +71,7 @@ ylabel('Pressure Coefficient')
 
 
 figure(4)
-plot(x_coord,C_p_10deg)
+plot(x_coord/chord,C_p_10deg)
 set(gca, 'YDir','reverse')
 legend('Experimental')
 title('Pressure Coefficients at 10 degrees of attack')
@@ -80,7 +80,7 @@ ylabel('Pressure Coefficient')
 
 
 figure(5)
-plot(x_coord,C_p_15deg)
+plot(x_coord/chord,C_p_15deg)
 set(gca, 'YDir','reverse')
 legend('Experimental')
 title('Pressure Coefficients at 15 degrees of attack')

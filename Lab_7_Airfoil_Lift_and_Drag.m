@@ -49,7 +49,7 @@ C_p_5deg = five_deg_pressure'     / (0.631065 * mmHg2Pa);
 C_p_10deg = ten_deg_pressure'     / (0.625189 * mmHg2Pa);
 C_p_15deg = fifteen_deg_pressure' / (0.629732 * mmHg2Pa);
 
-figure(2)
+figure('Name', '0 Deg Cp');
 plot(x_coord/chord, C_p_0deg)
 hold on
 %plot(x_coord(21:end, C_p_0deg(21:end)))
@@ -61,7 +61,7 @@ title('Pressure Coefficients at 0 degrees of attack')
 xlabel('x/c')
 ylabel('Pressure Coefficient')
 
-figure(3)
+figure('Name', '5 deg Cp');
 plot(x_coord/chord, C_p_5deg)
 hold on
 plot(five_deg_data.x,five_deg_data.Cpv,'r')
@@ -73,7 +73,7 @@ xlabel('x/c')
 ylabel('Pressure Coefficient')
 
 
-figure(4)
+figure('Name', '10 deg Cp');
 plot(x_coord/chord,C_p_10deg)
 set(gca, 'YDir','reverse')
 legend('Experimental')
@@ -82,7 +82,7 @@ xlabel('x/c')
 ylabel('Pressure Coefficient')
 
 
-figure(5)
+figure('Name', '15 deg Cp');
 plot(x_coord/chord,C_p_15deg)
 set(gca, 'YDir','reverse')
 legend('Experimental')
@@ -148,7 +148,7 @@ Coeffs15deg = calculateCs(Cpseg15deg, 15, segments);
 %hold off
 
 % C_l vs Alpha Plot
-figure(6)
+figure('Name', 'Cl vs Alpha');
 
 plot(Polar_data_comp.Var1(7:37), Polar_data_comp.Var2(7:37))
 hold on
@@ -164,7 +164,7 @@ xlabel('Angle of attack (degrees)')
 ylabel('Lift Coefficient')
 
 % C_l vs C_d
-figure(7)
+figure('Drag Polar');
 
 plot(Polar_data_comp.Var2(7:37),Polar_data_comp.Var3(7:37))
 hold on 
